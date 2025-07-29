@@ -34,51 +34,51 @@
 
 <h1>Market-by-Price Snapshot Generator from Market-by-Order Data</h1>
 
-<h2>Overview</h2>
+<h2>📌 Overview</h2>
 <p>
   This project reconstructs <strong>Market-by-Price (MBP-10)</strong> snapshots from <strong>Market-by-Order (MBO)</strong> data.
-  It maintains an in-memory order book and emits snapshots of the top 10 levels on both bid and ask sides.
+  It maintains an in-memory order book and generates snapshots of the top 10 levels on both bid and ask sides at specific intervals.
 </p>
 <p>
-  This task was completed as part of a technical assignment for a <strong>Quantitative Developer</strong> role.
+  This task was completed as part of a technical evaluation for a <strong>Quantitative Developer</strong> position.
 </p>
 
 <h2>📁 Project Structure</h2>
 <pre><code>.
 ├── main.cpp               # Program entry point
-├── parser.hpp/cpp         # MBO CSV reader and parser
-├── order_book.hpp/cpp     # In-memory order book logic
-├── mbp_writer.hpp/cpp     # MBP snapshot writer
-├── types.hpp              # Structs and enums
-├── mbo.csv                # Input: Market-by-Order CSV
-├── mbp.csv                # Output: Reconstructed MBP snapshots
+├── parser.hpp / .cpp      # MBO CSV parser
+├── order_book.hpp / .cpp  # Order book state management
+├── mbp_writer.hpp / .cpp  # MBP snapshot writer
+├── types.hpp              # Enums and type definitions
+├── mbo.csv                # Input: MBO records
+├── mbp.csv                # Output: MBP snapshots
 └── README.html            # Project documentation
 </code></pre>
 
 <h2>⚙️ Build & Run Instructions</h2>
 
-<h3>Prerequisites</h3>
+<h3>🔧 Prerequisites</h3>
 <ul>
   <li>C++17 or higher</li>
-  <li>Standard build tools (g++, make, or CMake)</li>
+  <li>Standard build toolchain (e.g., <code>g++</code>, <code>make</code>, or <code>CMake</code>)</li>
 </ul>
 
-<h3>Build using g++</h3>
-<pre><code>g++ -std=c++17 main.cpp parser.cpp order_book.cpp mbp_writer.cpp -o mbp_builder</code></pre>
+<h3>🛠️ Build (Using g++)</h3>
+<pre><code>g++ -std=c++17 main.cpp parser.cpp order_book.cpp mbp_writer.cpp -o mbp_reconstructor</code></pre>
 
-<h3>Run</h3>
-<pre><code>./mbp_builder mbo.csv mbp.csv</code></pre>
+<h3>🚀 Run</h3>
+<pre><code>./mbp_reconstructor mbo.csv mbp.csv</code></pre>
 
 <h2>📥 Input Format (<code>mbo.csv</code>)</h2>
 <pre><code>ts_event,symbol,side,price,size
 2025-07-17T13:46:10.904672934Z,ARL,Ask,2,644856
 ...</code></pre>
 <ul>
-  <li><strong>ts_event</strong>: Event timestamp</li>
+  <li><strong>ts_event</strong>: Timestamp of the event</li>
   <li><strong>symbol</strong>: Instrument symbol</li>
-  <li><strong>side</strong>: Bid or Ask</li>
-  <li><strong>price</strong>: Price level</li>
-  <li><strong>size</strong>: Quantity at that level</li>
+  <li><strong>side</strong>: Either <code>Bid</code> or <code>Ask</code></li>
+  <li><strong>price</strong>: Order price (as integer or decimal)</li>
+  <li><strong>size</strong>: Quantity at the price level</li>
 </ul>
 
 <h2>📤 Output Format (<code>mbp.csv</code>)</h2>
@@ -87,46 +87,52 @@
 2025-07-17T13:46:10.904672934Z,ARL,Ask,13,220
 ...</code></pre>
 <ul>
-  <li>Each snapshot contains the <strong>top 10 bids and asks</strong></li>
-  <li>Only <strong>10 unique timestamps</strong> are considered for snapshot output</li>
+  <li>Each snapshot includes up to the <strong>top 10 bids and 10 asks</strong></li>
+  <li>Exactly <strong>10 snapshots</strong> are taken, evenly spaced through the MBO data</li>
+  <li>Prices are scaled and formatted with appropriate precision</li>
 </ul>
 
-<h2>💡 Implementation Insights</h2>
+<h2>💡 Implementation Highlights</h2>
 <ul>
-  <li>Book state is stored using <code>std::map</code>:
+  <li>Price and size levels are tracked using <code>std::map</code>:
     <ul>
-      <li><code>std::greater&lt;&gt;</code> for descending bid prices</li>
-      <li>default ascending sort for asks</li>
+      <li><code>std::greater&lt;&gt;</code> for descending <strong>bids</strong></li>
+      <li>Default ascending order for <strong>asks</strong></li>
     </ul>
   </li>
-  <li>Snapshots are taken on each new <code>ts_event</code></li>
-  <li>All actions are currently treated as <code>Action::Add</code> to match simplified CSV format</li>
+  <li>Each MBO event updates the internal book state via actions like Add, Modify, Fill, Cancel, and Clear</li>
+  <li>Every 1/10th of the total records, an MBP snapshot is taken (e.g., every 584 records for 5840 rows)</li>
+  <li>Book state is cleared after each snapshot to ensure independence</li>
 </ul>
 
 <h2>📌 Assumptions</h2>
 <ul>
-  <li>All actions are assumed to be new orders (<code>Add</code>)</li>
-  <li>Only 5 fields are present in the CSV (others are stubbed)</li>
-  <li>Snapshot limit: 10 unique timestamps only</li>
+  <li>Only the first 10 unique timestamps are considered for MBP snapshot output</li>
+  <li>CSV input only includes 5 fields, extra MBO fields are stubbed internally</li>
+  <li>Snapshots are evenly spaced across the dataset</li>
 </ul>
 
 <h2>✅ Output Validation</h2>
 <ul>
-  <li>Final output contains exactly 10 MBP snapshots</li>
-  <li>Each MBP snapshot has ≤10 bids and asks</li>
-  <li>Output prices and sizes match book state at each <code>ts_event</code></li>
+  <li>Exactly 10 MBP snapshots are written</li>
+  <li>Each snapshot contains ≤10 bids and ≤10 asks</li>
+  <li>Prices and sizes in the output match the internal book state accurately at each snapshot timestamp</li>
 </ul>
 
-<h2>🚀 Performance Note</h2>
+<h2>🚀 Performance Consideration</h2>
 <p>
-  For high-frequency usage, consider replacing <code>std::map</code> with a flat container or specialized structure.
-  The modular design allows drop-in optimization.
+  While <code>std::map</code> provides ordered keys, for real-time or high-frequency applications, you may consider:
 </p>
+<ul>
+  <li>Using <code>std::unordered_map</code> with a secondary sorted container</li>
+  <li>Preallocating structures for predictable symbol sets</li>
+  <li>Multi-threading or SIMD optimizations</li>
+</ul>
 
-<h2>🧠 Author</h2>
+<h2>👨‍💻 Author</h2>
 <p>
   <strong>Aditya Kumar Singh</strong><br>
-  Quantitative Developer Trial Project
+  Technical Assignment – Quantitative Developer (Blockhouse)
 </p>
 
 </body>
