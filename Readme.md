@@ -105,6 +105,7 @@
 <h2>👨‍💻 Author</h2>
 <p>
   <strong>Aditya Kumar Singh</strong><br>
+  <strong>contribute</strong>
 </p>
 
 </body>
