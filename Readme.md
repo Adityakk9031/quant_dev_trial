@@ -105,7 +105,6 @@
 <h2>👨‍💻 Author</h2>
 <p>
   <strong>Aditya Kumar Singh</strong><br>
-  Technical Assignment – Quantitative Developer (Blockhouse)
 </p>
 
 </body>
